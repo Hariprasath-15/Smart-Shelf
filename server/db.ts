@@ -42,10 +42,23 @@ class Database {
         // If file contains older schema without milk/biscuits/shampoo, migrate to SEED_PRODUCTS
         const hasUserCatalog = parsed.products && parsed.products.some((p: any) => p.name === 'Milk' || p.id === 'milk');
         if (hasUserCatalog) {
+          // Deduplicate any alerts that might share an ID
+          const rawAlerts: Alert[] = parsed.alerts || DEFAULT_ALERTS;
+          const seenIds = new Set<string>();
+          const dedupedAlerts: Alert[] = [];
+          for (const a of rawAlerts) {
+            let uniqueId = a.id;
+            if (!uniqueId || seenIds.has(uniqueId)) {
+              uniqueId = `alert-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+            }
+            seenIds.add(uniqueId);
+            dedupedAlerts.push({ ...a, id: uniqueId });
+          }
+
           return {
             products: parsed.products || DEFAULT_PRODUCTS,
             sensors: parsed.sensors || DEFAULT_SENSORS,
-            alerts: parsed.alerts || DEFAULT_ALERTS,
+            alerts: dedupedAlerts,
             ai_modules: parsed.ai_modules || {
               product_recognition: true,
               low_stock_predictor: true,
@@ -266,7 +279,7 @@ class Database {
 
     const newAlert: Alert = {
       ...alert,
-      id: alert.id || `alert-${Date.now()}`,
+      id: alert.id || `alert-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       status: 'ACTIVE',
       created_at: new Date().toISOString(),
     };

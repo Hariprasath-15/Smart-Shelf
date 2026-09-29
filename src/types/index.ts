@@ -26,6 +26,12 @@ export interface SensorData {
   hardware_online: boolean;
   live_image_base64?: string;
   stream_url?: string;
+  yolo_count?: number;
+  yolo_detections?: Array<{
+    label: string;
+    confidence: number;
+    bbox?: [number, number, number, number]; // [ymin, xmin, ymax, xmax] normalized (0-1000) or pixels
+  }>;
 }
 
 export type AlertType = 'LOW_STOCK' | 'MISPLACED' | 'TAMPERING' | 'OFFLINE';

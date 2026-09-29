@@ -70,7 +70,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   onSimulateAction,
 }) => {
   const [currentSection, setCurrentSection] = useState<'dashboard' | 'inventory' | 'alerts' | 'sensors' | 'camera'>('dashboard');
-  const [selectedShelfForCam, setSelectedShelfForCam] = useState<string>('Aisle 1 · Rack A');
+  const [selectedShelfForCam, setSelectedShelfForCam] = useState<string>('Aisle 3 · Rack B');
   const [isMisplaceSimulating, setIsMisplaceSimulating] = useState(false);
   const [currentFilter, setCurrentFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -458,7 +458,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                         🎉 All product alerts resolved! Shelves operating normally.
                       </div>
                     ) : (
-                      activeAlerts.slice(0, 4).map((alert) => {
+                      activeAlerts.slice(0, 4).map((alert, idx) => {
                         const icon = getProductIcon(alert.product_name);
                         const severityClass =
                           alert.severity === 'CRITICAL'
@@ -475,7 +475,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                             : 'resolve';
 
                         return (
-                          <div key={alert.id} className={`user-alert ${severityClass}`}>
+                          <div key={`${alert.id}-${alert.alert_type}-${idx}`} className={`user-alert ${severityClass}`}>
                             <div className="user-alert-product-avatar">{icon}</div>
                             <div className="user-alert-content">
                               <div className="user-alert-header">
@@ -943,7 +943,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                     <p>No product issues match your current filter or search criteria.</p>
                   </div>
                 ) : (
-                  filteredAlerts.map((alert) => {
+                    filteredAlerts.map((alert, idx) => {
                     const prod = products.find((p) => p.id === alert.product_id);
                     const currentStock = prod ? prod.current_stock : alert.metadata?.current_stock;
                     const maxStock = prod ? prod.max_capacity : 20;
@@ -964,7 +964,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                         : 'resolve';
 
                     return (
-                      <div key={alert.id} className={`user-alert ${severityClass}`}>
+                      <div key={`${alert.id}-${alert.alert_type}-${idx}`} className={`user-alert ${severityClass}`}>
                         <div className="user-alert-product-avatar">{icon}</div>
                         <div className="user-alert-content">
                           <div className="user-alert-header">
@@ -1209,7 +1209,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                                 ? 'warning'
                                 : ''
                             }`}
-                            style={{ minWidth: '220px', zIndex: 5 }}
+                            style={{ minWidth: '240px', zIndex: 5 }}
                           >
                             <div className="text-4xl mb-1 filter drop-shadow">
                               {getProductIcon(detectedLabel)}
@@ -1217,6 +1217,34 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                             <div className="text-sm font-bold text-white tracking-wide">
                               {detectedLabel}
                             </div>
+
+                            {/* YOLO Model Badge */}
+                            <div className="mt-0.5 mb-1 px-2 py-0.5 rounded bg-indigo-950/90 border border-indigo-500/40 text-[10px] font-mono text-indigo-300 flex items-center justify-center gap-1.5 shadow">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                              YOLO Object Counter Active
+                            </div>
+
+                            {/* Prominent Live Quantity Display in Optical Viewfinder */}
+                            <div className="my-1.5 px-3 py-1 rounded-md bg-slate-900/90 border border-slate-700 text-center w-full shadow-inner">
+                              <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">
+                                Live In-Stock Quantity
+                              </span>
+                              <div className="flex items-baseline justify-center gap-1.5">
+                                <span className={`text-xl font-black font-mono ${
+                                  activeProd.current_stock === 0
+                                    ? 'text-red-500'
+                                    : isLowStock
+                                    ? 'text-amber-400'
+                                    : 'text-emerald-400'
+                                }`}>
+                                  {activeProd.current_stock}
+                                </span>
+                                <span className="text-xs text-slate-400 font-mono">
+                                  / {activeProd.max_capacity} units
+                                </span>
+                              </div>
+                            </div>
+
                             <div className="text-[11px] font-mono text-emerald-400 mt-0.5">
                               Confidence: {confidencePct}%
                             </div>
@@ -1253,13 +1281,52 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                             </div>
                           </div>
                           <div>
-                            <span className="text-slate-400">Firmware Engine:</span>
-                            <div className="font-mono text-purple-400">
-                              TensorFlow Lite Micro
+                            <span className="text-slate-400">Vision Model:</span>
+                            <div className="font-mono text-amber-400 font-bold flex items-center gap-1">
+                              <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                              YOLOv8 Real-Time Counter
                             </div>
                           </div>
                         </div>
                       </div>
+
+                      {/* Live ESP32 Physical Camera IP Connection Bar */}
+                      {(() => {
+                        const deviceIp = activeSensor?.stream_url
+                          ? activeSensor.stream_url.replace(/^http:\/\//, '').replace(/:\d+.*$/, '')
+                          : '192.168.137.241';
+
+                        return (
+                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between flex-wrap gap-2 text-xs">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                              <span className="font-semibold text-blue-900">
+                                Live ESP32-CAM (YOLO Source):
+                              </span>
+                              <span className="font-mono bg-white px-2 py-0.5 rounded border border-blue-200 text-blue-700 font-bold">
+                                {deviceIp}
+                              </span>
+                              <span className="text-slate-500">➜ Assigned to: <strong>{activeProd.name}</strong> ({activeProd.shelf_position})</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => window.open(`http://${deviceIp}`, '_blank')}
+                                className="text-xs bg-white text-blue-700 hover:bg-blue-100 font-medium px-2.5 py-1 rounded border border-blue-300 transition-colors flex items-center gap-1"
+                              >
+                                🌐 Open Local Web Server
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setIsHardwareGuideOpen(true)}
+                                className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-2.5 py-1 rounded transition-colors flex items-center gap-1 shadow-sm"
+                              >
+                                ⚡ YOLO Python Guide
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Optical Trigger Controls */}
                       <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between flex-wrap gap-3">
@@ -1349,6 +1416,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                             <strong className="text-slate-900 text-sm">
                               {activeProd.current_stock} / {activeProd.max_capacity} units
                             </strong>
+                          </div>
+
+                          <div className="flex justify-between pb-2 border-b border-slate-200">
+                            <span className="text-slate-500">YOLO Object Counter:</span>
+                            <span className="inline-flex items-center gap-1.5 font-bold font-mono text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded text-xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                              {activeSensor?.yolo_count !== undefined ? activeSensor.yolo_count : activeProd.current_stock} items tracked
+                            </span>
                           </div>
 
                           <div className="flex justify-between pb-2 border-b border-slate-200">
@@ -1672,10 +1747,107 @@ void loop() {
                 </pre>
               </div>
 
+              {/* YOLO Python Object Detection and Counter Section */}
+              <div className="border border-indigo-200 rounded-xl p-4 bg-indigo-50/50">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-bold text-sm text-indigo-950 flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs">3</span>
+                    Python YOLOv8 Real-Time Product Counter & Streamer
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const pyCode = `# YOLOv8 Product Counter for ESP32-CAM stream (192.168.137.241)
+# Requirements: pip install ultralytics opencv-python requests
+
+import cv2
+import requests
+import time
+from ultralytics import YOLO
+
+# 1. Config
+ESP32_STREAM_URL = "http://192.168.137.241:81/stream"  # or "http://192.168.137.241/capture"
+DASHBOARD_API = "${window.location.origin}/api/sensors/payload"
+SHELF_ID = "Aisle 3 · Rack B"       # Biscuits Shelf
+TARGET_CLASS = "biscuits"           # YOLO class label or custom model class
+CONFIDENCE_THRESHOLD = 0.50
+
+# 2. Load YOLO model (yolov8n.pt or your custom fine-tuned weights)
+print("Loading YOLOv8...")
+model = YOLO("yolov8n.pt")
+
+# 3. Connect to ESP32 stream
+cap = cv2.VideoCapture(ESP32_STREAM_URL)
+last_sync_time = 0
+
+print(f"Connecting to ESP32-CAM stream at {ESP32_STREAM_URL}...")
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        print("Waiting for camera stream frames...")
+        time.sleep(1)
+        cap = cv2.VideoCapture(ESP32_STREAM_URL)
+        continue
+
+    # Run YOLO inference
+    results = model(frame, conf=CONFIDENCE_THRESHOLD, verbose=False)
+    detections = results[0].boxes
+
+    # Count detected objects
+    counted_items = len(detections)
+
+    # Annotate frame
+    annotated_frame = results[0].plot()
+    cv2.putText(annotated_frame, f"YOLO Count: {counted_items}", (20, 40),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    cv2.imshow("ESP32-CAM 192.168.137.241 YOLO Counting", annotated_frame)
+
+    # Sync live count with Dashboard every 1.5 seconds
+    current_time = time.time()
+    if current_time - last_sync_time > 1.5:
+        try:
+            payload = {
+                "shelf_id": SHELF_ID,
+                "yolo_count": counted_items,
+                "cam_detected_label": "Biscuits (YOLO v8)",
+                "cam_confidence": 0.98 if counted_items > 0 else 0.5,
+                "device_mac": "ESP32-192.168.137.241",
+                "stream_url": ESP32_STREAM_URL,
+                "hardware_online": True
+            }
+            res = requests.post(DASHBOARD_API, json=payload, timeout=2)
+            print(f"[YOLO Sync] Sent count: {counted_items} | Server: {res.status_code}")
+            last_sync_time = current_time
+        except Exception as e:
+            print(f"[YOLO Sync Error] {e}")
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()`;
+                      navigator.clipboard.writeText(pyCode);
+                      showToast('Python YOLO counter script copied to clipboard!', 'success');
+                    }}
+                    className="user-btn-sm user-btn-relocate"
+                  >
+                    📋 Copy Python Script
+                  </button>
+                </div>
+                <p className="text-slate-600 mb-2">
+                  Run this Python script on your PC/server to read frames from <code>http://192.168.137.2:81/stream</code>, run YOLO object counting, and automatically push live quantities to this dashboard:
+                </p>
+                <pre className="bg-slate-900 text-cyan-300 p-3 rounded-lg overflow-x-auto text-[10px] font-mono leading-relaxed max-h-56">
+{`# Quick Start:
+pip install ultralytics opencv-python requests
+python yolo_counter.py`}
+                </pre>
+              </div>
+
               {/* Instant Verification Test with curl / simulated hardware */}
               <div className="border border-slate-200 rounded-xl p-4 bg-slate-50">
                 <h4 className="font-bold text-sm text-slate-900 mb-2 flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs">3</span>
+                  <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs">4</span>
                   Test Your Connection from Terminal or Serial
                 </h4>
                 <p className="text-slate-600 mb-2">

@@ -8,10 +8,11 @@
       "shelf_position": "Aisle 1 · Rack A",
       "expected_weight_g": 1050,
       "min_threshold": 6,
-      "current_stock": 18,
+      "current_stock": 20,
       "max_capacity": 20,
       "last_restocked": "2026-09-28T21:00:00.000Z",
-      "created_at": "2026-09-28T00:00:00.000Z"
+      "created_at": "2026-09-28T00:00:00.000Z",
+      "updated_at": "2026-09-29T14:26:30.433Z"
     },
     {
       "id": "biscuits",
@@ -21,10 +22,11 @@
       "shelf_position": "Aisle 3 · Rack B",
       "expected_weight_g": 500,
       "min_threshold": 7,
-      "current_stock": 4,
+      "current_stock": 20,
       "max_capacity": 20,
       "last_restocked": "2026-09-28T21:00:00.000Z",
-      "created_at": "2026-09-28T00:00:00.000Z"
+      "created_at": "2026-09-28T00:00:00.000Z",
+      "updated_at": "2026-09-29T16:11:48.194Z"
     },
     {
       "id": "shampoo",
@@ -34,10 +36,11 @@
       "shelf_position": "Aisle 4 · Rack C",
       "expected_weight_g": 450,
       "min_threshold": 5,
-      "current_stock": 1,
+      "current_stock": 20,
       "max_capacity": 20,
       "last_restocked": "2026-09-28T21:00:00.000Z",
-      "created_at": "2026-09-28T00:00:00.000Z"
+      "created_at": "2026-09-28T00:00:00.000Z",
+      "updated_at": "2026-09-29T13:56:06.470Z"
     },
     {
       "id": "rice",
@@ -47,10 +50,11 @@
       "shelf_position": "Aisle 2 · Rack A",
       "expected_weight_g": 1000,
       "min_threshold": 6,
-      "current_stock": 15,
+      "current_stock": 20,
       "max_capacity": 20,
       "last_restocked": "2026-09-28T21:00:00.000Z",
-      "created_at": "2026-09-28T00:00:00.000Z"
+      "created_at": "2026-09-28T00:00:00.000Z",
+      "updated_at": "2026-09-29T13:56:06.470Z"
     },
     {
       "id": "juice",
@@ -60,10 +64,11 @@
       "shelf_position": "Aisle 5 · Rack B",
       "expected_weight_g": 600,
       "min_threshold": 5,
-      "current_stock": 10,
+      "current_stock": 20,
       "max_capacity": 20,
       "last_restocked": "2026-09-28T21:00:00.000Z",
-      "created_at": "2026-09-28T00:00:00.000Z"
+      "created_at": "2026-09-28T00:00:00.000Z",
+      "updated_at": "2026-09-29T13:56:06.470Z"
     },
     {
       "id": "soap",
@@ -73,10 +78,24 @@
       "shelf_position": "Aisle 6 · Rack A",
       "expected_weight_g": 150,
       "min_threshold": 7,
-      "current_stock": 7,
+      "current_stock": 20,
       "max_capacity": 20,
       "last_restocked": "2026-09-28T21:00:00.000Z",
-      "created_at": "2026-09-28T00:00:00.000Z"
+      "created_at": "2026-09-28T00:00:00.000Z",
+      "updated_at": "2026-09-29T13:56:06.470Z"
+    },
+    {
+      "name": "Chips",
+      "category": "Snacks",
+      "shelf_position": "Aisle 1 · Rack B",
+      "expected_weight_g": 500,
+      "min_threshold": 4,
+      "current_stock": 20,
+      "max_capacity": 20,
+      "image_url": "/src/assets/images/shelf_prod_milk_1790616054203.jpg",
+      "id": "prod-1790690077959",
+      "created_at": "2026-09-29T13:54:37.959Z",
+      "updated_at": "2026-09-29T13:56:06.470Z"
     }
   ],
   "sensors": {
@@ -84,34 +103,36 @@
       "id": "sensor-milk",
       "shelf_id": "Aisle 1 · Rack A",
       "ir_sensor_state": true,
-      "load_cell_weight_g": 18900,
+      "load_cell_weight_g": 20997,
       "cam_detected_label": "Milk",
-      "cam_confidence": 0.98,
-      "timestamp": "2026-09-28T21:00:00.000Z",
-      "device_mac": "24:6F:28:B2:1A:01",
+      "cam_confidence": 0.99,
+      "timestamp": "2026-09-29T16:12:19.103Z",
+      "device_mac": "ESP32-192.168.137.118",
       "hardware_battery_pct": 98,
-      "hardware_online": true
+      "hardware_online": true,
+      "stream_url": "http://192.168.137.118:81/stream"
     },
     "Aisle 3 · Rack B": {
       "id": "sensor-biscuits",
       "shelf_id": "Aisle 3 · Rack B",
       "ir_sensor_state": true,
-      "load_cell_weight_g": 2000,
+      "load_cell_weight_g": 10002,
       "cam_detected_label": "Biscuits",
-      "cam_confidence": 0.94,
-      "timestamp": "2026-09-28T21:00:00.000Z",
-      "device_mac": "24:6F:28:B2:1A:02",
-      "hardware_battery_pct": 94,
-      "hardware_online": true
+      "cam_confidence": 0.97,
+      "timestamp": "2026-09-29T16:12:19.103Z",
+      "device_mac": "ESP32-192.168.137.39",
+      "hardware_battery_pct": 98,
+      "hardware_online": true,
+      "stream_url": "http://192.168.137.39:81/stream"
     },
     "Aisle 4 · Rack C": {
       "id": "sensor-shampoo",
       "shelf_id": "Aisle 4 · Rack C",
       "ir_sensor_state": true,
-      "load_cell_weight_g": 450,
+      "load_cell_weight_g": 9003,
       "cam_detected_label": "Shampoo",
-      "cam_confidence": 0.91,
-      "timestamp": "2026-09-28T21:00:00.000Z",
+      "cam_confidence": 0.98,
+      "timestamp": "2026-09-29T16:12:19.103Z",
       "device_mac": "24:6F:28:B2:1A:03",
       "hardware_battery_pct": 89,
       "hardware_online": true
@@ -120,10 +141,10 @@
       "id": "sensor-rice",
       "shelf_id": "Aisle 2 · Rack A",
       "ir_sensor_state": true,
-      "load_cell_weight_g": 15000,
+      "load_cell_weight_g": 20002,
       "cam_detected_label": "Rice",
-      "cam_confidence": 0.96,
-      "timestamp": "2026-09-28T21:00:00.000Z",
+      "cam_confidence": 0.97,
+      "timestamp": "2026-09-29T16:12:19.103Z",
       "device_mac": "24:6F:28:B2:1A:04",
       "hardware_battery_pct": 95,
       "hardware_online": true
@@ -132,10 +153,10 @@
       "id": "sensor-juice",
       "shelf_id": "Aisle 5 · Rack B",
       "ir_sensor_state": true,
-      "load_cell_weight_g": 6000,
+      "load_cell_weight_g": 11998,
       "cam_detected_label": "Juice",
-      "cam_confidence": 0.97,
-      "timestamp": "2026-09-28T21:00:00.000Z",
+      "cam_confidence": 0.99,
+      "timestamp": "2026-09-29T16:12:19.103Z",
       "device_mac": "24:6F:28:B2:1A:05",
       "hardware_battery_pct": 92,
       "hardware_online": true
@@ -144,16 +165,124 @@
       "id": "sensor-soap",
       "shelf_id": "Aisle 6 · Rack A",
       "ir_sensor_state": true,
-      "load_cell_weight_g": 1050,
+      "load_cell_weight_g": 3000,
       "cam_detected_label": "Soap",
-      "cam_confidence": 0.95,
-      "timestamp": "2026-09-28T21:00:00.000Z",
+      "cam_confidence": 0.97,
+      "timestamp": "2026-09-29T16:12:19.103Z",
       "device_mac": "24:6F:28:B2:1A:06",
       "hardware_battery_pct": 90,
+      "hardware_online": true
+    },
+    "Aisle 1 · Rack B": {
+      "id": "sensor-7959",
+      "shelf_id": "Aisle 1 · Rack B",
+      "ir_sensor_state": true,
+      "load_cell_weight_g": 10001,
+      "cam_detected_label": "Chips",
+      "cam_confidence": 0.96,
+      "timestamp": "2026-09-29T16:12:19.103Z",
+      "device_mac": "24:6F:28:66:13:57",
+      "hardware_battery_pct": 95,
       "hardware_online": true
     }
   },
   "alerts": [
+    {
+      "product_id": "biscuits",
+      "product_name": "Biscuits",
+      "shelf_id": "Aisle 3 · Rack B",
+      "alert_type": "MISPLACED",
+      "message": "Misplaced Product: ESP32-Cam identified \"Unregistered Beverage Can\" (93% conf) on Aisle 3 · Rack B instead of \"Biscuits\".",
+      "severity": "WARNING",
+      "metadata": {
+        "expected_product": "Biscuits",
+        "detected_product": "Unregistered Beverage Can"
+      },
+      "id": "alert-1790695788557",
+      "status": "RESOLVED",
+      "created_at": "2026-09-29T15:29:48.557Z",
+      "resolved_at": "2026-09-29T15:29:53.921Z"
+    },
+    {
+      "product_id": "biscuits",
+      "product_name": "Biscuits",
+      "shelf_id": "Aisle 3 · Rack B",
+      "alert_type": "MISPLACED",
+      "message": "Misplaced Product: ESP32-Cam identified \"Unregistered Beverage Can\" (93% conf) on Aisle 3 · Rack B instead of \"Biscuits\".",
+      "severity": "WARNING",
+      "metadata": {
+        "expected_product": "Biscuits",
+        "detected_product": "Unregistered Beverage Can"
+      },
+      "id": "alert-1790695752275",
+      "status": "RESOLVED",
+      "created_at": "2026-09-29T15:29:12.275Z",
+      "resolved_at": "2026-09-29T15:29:36.267Z"
+    },
+    {
+      "product_id": "biscuits",
+      "product_name": "Biscuits",
+      "shelf_id": "Aisle 3 · Rack B",
+      "alert_type": "MISPLACED",
+      "message": "Misplaced Product: ESP32-Cam identified \"Unregistered Beverage Can\" (93% conf) on Aisle 3 · Rack B instead of \"Biscuits\".",
+      "severity": "WARNING",
+      "metadata": {
+        "expected_product": "Biscuits",
+        "detected_product": "Unregistered Beverage Can"
+      },
+      "id": "alert-1790695726280",
+      "status": "RESOLVED",
+      "created_at": "2026-09-29T15:28:46.280Z",
+      "resolved_at": "2026-09-29T15:28:54.489Z"
+    },
+    {
+      "product_id": "biscuits",
+      "product_name": "Biscuits",
+      "shelf_id": "Aisle 3 · Rack B",
+      "alert_type": "MISPLACED",
+      "message": "Misplaced Product: ESP32-Cam identified \"Unregistered Beverage Can\" (93% conf) on Aisle 3 · Rack B instead of \"Biscuits\".",
+      "severity": "WARNING",
+      "metadata": {
+        "expected_product": "Biscuits",
+        "detected_product": "Unregistered Beverage Can"
+      },
+      "id": "alert-1790695689186",
+      "status": "RESOLVED",
+      "created_at": "2026-09-29T15:28:09.186Z",
+      "resolved_at": "2026-09-29T15:28:28.538Z"
+    },
+    {
+      "product_id": "biscuits",
+      "product_name": "Biscuits",
+      "shelf_id": "Aisle 3 · Rack B",
+      "alert_type": "LOW_STOCK",
+      "message": "Low Stock Alert: Only 1 units left on Aisle 3 · Rack B (Min threshold: 7).",
+      "severity": "WARNING",
+      "metadata": {
+        "current_stock": 1,
+        "min_threshold": 7
+      },
+      "id": "alert-1790695584737",
+      "status": "RESOLVED",
+      "created_at": "2026-09-29T15:26:24.737Z",
+      "resolved_at": "2026-09-29T16:12:14.466Z"
+    },
+    {
+      "product_id": "biscuits",
+      "product_name": "Biscuits",
+      "shelf_id": "Aisle 3 · Rack B",
+      "alert_type": "TAMPERING",
+      "message": "Weight Tampering Detected on Aisle 3 · Rack B: Expected 10000g for 20 units, measured 500g (variance: 9500g).",
+      "severity": "CRITICAL",
+      "metadata": {
+        "expected_weight_g": 10000,
+        "measured_weight_g": 500,
+        "weight_diff_g": 9500
+      },
+      "id": "alert-1790695584738",
+      "status": "ACTIVE",
+      "created_at": "2026-09-29T15:26:24.738Z"
+    },
     {
       "id": "alert-101",
       "product_id": "shampoo",
@@ -162,12 +291,13 @@
       "alert_type": "LOW_STOCK",
       "message": "Shampoo stock is at a critical level (only 1 item remaining). Immediate restock needed.",
       "severity": "CRITICAL",
-      "status": "ACTIVE",
+      "status": "RESOLVED",
       "created_at": "2026-09-28T21:03:00.000Z",
       "metadata": {
         "current_stock": 1,
         "min_threshold": 5
-      }
+      },
+      "resolved_at": "2026-09-29T13:56:06.471Z"
     },
     {
       "id": "alert-102",
@@ -177,12 +307,13 @@
       "alert_type": "LOW_STOCK",
       "message": "Biscuits stock has fallen below minimum threshold (4 remaining out of 20).",
       "severity": "WARNING",
-      "status": "ACTIVE",
+      "status": "RESOLVED",
       "created_at": "2026-09-28T20:57:00.000Z",
       "metadata": {
         "current_stock": 4,
         "min_threshold": 7
-      }
+      },
+      "resolved_at": "2026-09-29T16:11:48.194Z"
     },
     {
       "id": "alert-103",
@@ -192,12 +323,13 @@
       "alert_type": "MISPLACED",
       "message": "AI camera detected Shampoo bottle placed incorrectly in Aisle 2 (Rice Rack) instead of Aisle 4.",
       "severity": "WARNING",
-      "status": "ACTIVE",
+      "status": "RESOLVED",
       "created_at": "2026-09-28T20:51:00.000Z",
       "metadata": {
         "expected_product": "Rice",
         "detected_product": "Shampoo"
-      }
+      },
+      "resolved_at": "2026-09-29T13:55:44.433Z"
     },
     {
       "id": "alert-104",
@@ -207,12 +339,13 @@
       "alert_type": "LOW_STOCK",
       "message": "Soap inventory is low (7 items remaining). Order queued for supplier.",
       "severity": "WARNING",
-      "status": "ACTIVE",
+      "status": "RESOLVED",
       "created_at": "2026-09-28T20:43:00.000Z",
       "metadata": {
         "current_stock": 7,
         "min_threshold": 7
-      }
+      },
+      "resolved_at": "2026-09-29T13:56:06.471Z"
     },
     {
       "id": "alert-105",
@@ -222,13 +355,14 @@
       "alert_type": "TAMPERING",
       "message": "Weight sensor detected sudden unverified weight change on Rice shelf.",
       "severity": "CRITICAL",
-      "status": "ACTIVE",
+      "status": "RESOLVED",
       "created_at": "2026-09-28T20:34:00.000Z",
       "metadata": {
         "expected_weight_g": 15000,
         "measured_weight_g": 13200,
         "weight_diff_g": 1800
-      }
+      },
+      "resolved_at": "2026-09-29T13:15:28.893Z"
     }
   ],
   "ai_modules": {
@@ -239,5 +373,5 @@
     "cloud_sync": "synced"
   },
   "hardware_online": true,
-  "last_heartbeat": "2026-09-28T21:05:00.000Z"
+  "last_heartbeat": "2026-09-29T16:12:19.103Z"
 }

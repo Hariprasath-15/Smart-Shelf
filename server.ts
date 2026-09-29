@@ -214,7 +214,7 @@ app.get('/api/sensors/latest', (req: Request, res: Response) => {
   res.json(db.getSensors());
 });
 
-// RESTful webhook for receiving ESP32-Cam, IR sensor, and Load Cell payloads
+// RESTful webhook for receiving ESP32-Cam, YOLO inference, IR sensor, and Load Cell payloads
 app.post('/api/sensors/payload', (req: Request, res: Response) => {
   const {
     shelf_id,
@@ -226,6 +226,8 @@ app.post('/api/sensors/payload', (req: Request, res: Response) => {
     hardware_battery_pct,
     live_image_base64,
     stream_url,
+    yolo_count,
+    yolo_detections,
   } = req.body;
 
   if (!shelf_id) {
@@ -241,15 +243,26 @@ app.post('/api/sensors/payload', (req: Request, res: Response) => {
     hardware_battery_pct: hardware_battery_pct !== undefined ? Number(hardware_battery_pct) : 95,
     live_image_base64: live_image_base64 ? String(live_image_base64) : undefined,
     stream_url: stream_url ? String(stream_url) : undefined,
+    yolo_count: yolo_count !== undefined ? Number(yolo_count) : undefined,
+    yolo_detections: Array.isArray(yolo_detections) ? yolo_detections : undefined,
     hardware_online: true,
   });
 
-  // Calculate estimated stock based on load cell reading if unit weight known
+  // Calculate or sync product stock count:
+  // 1. If YOLO optical object detection count is provided, YOLO directly updates product stock!
+  // 2. Otherwise fall back to load cell weight calculation
   const product = db.getProductByShelf(shelf_id);
-  if (product && product.expected_weight_g > 0 && load_cell_weight_g !== undefined) {
-    const calculatedCount = Math.max(0, Math.round(Number(load_cell_weight_g) / product.expected_weight_g));
-    if (calculatedCount !== product.current_stock) {
-      db.updateProduct(product.id, { current_stock: calculatedCount });
+  if (product) {
+    if (yolo_count !== undefined) {
+      const detectedCount = Math.max(0, Math.round(Number(yolo_count)));
+      if (detectedCount !== product.current_stock) {
+        db.updateProduct(product.id, { current_stock: detectedCount });
+      }
+    } else if (product.expected_weight_g > 0 && load_cell_weight_g !== undefined) {
+      const calculatedCount = Math.max(0, Math.round(Number(load_cell_weight_g) / product.expected_weight_g));
+      if (calculatedCount !== product.current_stock) {
+        db.updateProduct(product.id, { current_stock: calculatedCount });
+      }
     }
   }
 
