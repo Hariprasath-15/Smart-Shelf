@@ -1,0 +1,8 @@
+{
+  "name": "Smart Shelf Monitoring System",
+  "description": "Production-grade IoT Smart Shelf Monitoring System integrated with ESP32-Cam, IR sensors, and Load Cell telemetry for real-time inventory tracking, tampering detection, and automated stock alerts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
