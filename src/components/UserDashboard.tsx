@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { Product, SensorData, Alert, SystemStatus, DashboardMetrics } from '../types/index.js';
+import { WebcamProductCounterModal } from './WebcamProductCounterModal.js';
 
 interface UserDashboardProps {
   products: Product[];
@@ -80,6 +81,88 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isHardwareGuideOpen, setIsHardwareGuideOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Live Optical AI Product Counter State
+  const [isAiCounting, setIsAiCounting] = useState(false);
+  const [aiCountResult, setAiCountResult] = useState<{
+    count: number;
+    confidence: number;
+    detected_product: string;
+    is_misplaced: boolean;
+    misplaced_item_name?: string;
+    notes: string;
+  } | null>(null);
+  const [isWebcamModalOpen, setIsWebcamModalOpen] = useState(false);
+  const [manualCountInput, setManualCountInput] = useState<string>('');
+
+  // In-Place Device Webcam Feed State (Direct live camera inside viewfinder)
+  const [isLiveWebcamActive, setIsLiveWebcamActive] = useState<boolean>(false);
+  const [webcamPermissionStatus, setWebcamPermissionStatus] = useState<'prompt' | 'granted' | 'denied' | 'error' | null>(null);
+  const [webcamErrorMessage, setWebcamErrorMessage] = useState<string | null>(null);
+  const liveVideoFeedRef = useRef<HTMLVideoElement | null>(null);
+  const liveMediaStreamRef = useRef<MediaStream | null>(null);
+
+  // Stop live camera stream on unmount or when toggled off
+  useEffect(() => {
+    return () => {
+      if (liveMediaStreamRef.current) {
+        liveMediaStreamRef.current.getTracks().forEach((t) => t.stop());
+        liveMediaStreamRef.current = null;
+      }
+    };
+  }, []);
+
+  const toggleLiveWebcam = async () => {
+    if (isLiveWebcamActive) {
+      if (liveMediaStreamRef.current) {
+        liveMediaStreamRef.current.getTracks().forEach((t) => t.stop());
+        liveMediaStreamRef.current = null;
+      }
+      setIsLiveWebcamActive(false);
+      setWebcamPermissionStatus(null);
+      showToast('Live webcam turned off', 'info');
+      return;
+    }
+
+    try {
+      setWebcamErrorMessage(null);
+      showToast('Requesting webcam permission...', 'info');
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setWebcamPermissionStatus('denied');
+        setWebcamErrorMessage('Webcam access is restricted by your browser. Please allow camera permissions or click "Open Webcam & Count" to upload/take a photo.');
+        return;
+      }
+
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'environment' },
+          audio: false,
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
+
+      liveMediaStreamRef.current = stream;
+      setWebcamPermissionStatus('granted');
+      setIsLiveWebcamActive(true);
+
+      if (liveVideoFeedRef.current) {
+        liveVideoFeedRef.current.srcObject = stream;
+        await liveVideoFeedRef.current.play().catch(() => {});
+      }
+      showToast('Webcam access granted! Live feed active in viewfinder.', 'success');
+    } catch (err: any) {
+      console.warn('Webcam permission error:', err);
+      setWebcamPermissionStatus('denied');
+      const msg = err.name === 'NotAllowedError'
+        ? 'Permission was denied. Click the lock/camera icon in your address bar to allow camera access.'
+        : `Camera error: ${err.message || 'Unable to access device webcam'}`;
+      setWebcamErrorMessage(msg);
+      showToast(msg, 'normal');
+    }
+  };
   const [newProductForm, setNewProductForm] = useState({
     name: '',
     category: 'Dairy',
@@ -1171,20 +1254,41 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                         <div className="esp32-hud-overlay">
                           <div className="flex items-center gap-2">
                             <span className="esp32-rec-badge">
-                              <span className="esp32-rec-dot" /> LIVE STREAM
+                              <span className="esp32-rec-dot" /> {isLiveWebcamActive ? 'LIVE WEBCAM' : 'LIVE STREAM'}
                             </span>
                             <span className="bg-slate-900/80 text-cyan-400 font-mono text-[11px] px-2 py-0.5 rounded border border-slate-700">
-                              ESP32-CAM · {activeProd.shelf_position}
+                              {isLiveWebcamActive ? 'DEVICE WEBCAM · Active' : `ESP32-CAM · ${activeProd.shelf_position}`}
                             </span>
                           </div>
-                          <div className="bg-slate-900/80 text-emerald-400 font-mono text-[11px] px-2 py-0.5 rounded border border-slate-700">
-                            15 FPS · 1280x720 JPEG
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={toggleLiveWebcam}
+                              className={`text-xs px-2.5 py-1 rounded font-bold transition-all flex items-center gap-1.5 shadow ${
+                                isLiveWebcamActive
+                                  ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                                  : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                              }`}
+                            >
+                              📷 {isLiveWebcamActive ? 'Stop Webcam' : 'Switch to Device Webcam'}
+                            </button>
+                            <div className="bg-slate-900/80 text-emerald-400 font-mono text-[11px] px-2 py-0.5 rounded border border-slate-700">
+                              {isLiveWebcamActive ? '30 FPS · WEBCAM HD' : '15 FPS · 1280x720 JPEG'}
+                            </div>
                           </div>
                         </div>
 
                         {/* Simulated or Real Optical Lens Feed with Detection Bounding Box */}
                         <div className="esp32-lens-feed relative">
-                          {activeSensor?.live_image_base64 ? (
+                          {isLiveWebcamActive ? (
+                            <video
+                              ref={liveVideoFeedRef}
+                              autoPlay
+                              playsInline
+                              muted
+                              className="absolute inset-0 w-full h-full object-cover"
+                            />
+                          ) : activeSensor?.live_image_base64 ? (
                             <img
                               src={`data:image/jpeg;base64,${activeSensor.live_image_base64}`}
                               alt="ESP32-Cam Real Hardware Stream"
@@ -1331,7 +1435,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                       {/* Optical Trigger Controls */}
                       <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between flex-wrap gap-3">
                         <div className="text-xs text-slate-600">
-                          <strong>Live ESP32-Cam Action Triggers:</strong> Test camera recognition when items are moved or misplaced.
+                          <strong>Live Optical Action Triggers:</strong> Simulate camera movements or misplaced items.
                         </div>
                         <div className="flex items-center gap-2">
                           <button
@@ -1364,6 +1468,182 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                             🔄 Reset Camera to Nominal
                           </button>
                         </div>
+                      </div>
+
+                      {/* Optical Product Counter Scanner (Webcam / Upload / AI Vision) */}
+                      <div className="p-4 bg-gradient-to-r from-indigo-900 to-slate-900 text-white rounded-xl shadow-lg border border-indigo-700/50">
+                        <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="p-1.5 bg-indigo-600 rounded-lg text-lg">🤖</span>
+                            <div>
+                              <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                                AI Camera Vision Counter
+                                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                  Gemini 3.8 Flash Vision + YOLO
+                                </span>
+                              </h4>
+                              <p className="text-xs text-indigo-200">
+                                Count visible units of <strong>{activeProd.name}</strong> on {activeProd.shelf_position} using your webcam or uploaded shelf photo.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {isLiveWebcamActive && (
+                              <button
+                                type="button"
+                                disabled={isAiCounting}
+                                onClick={async () => {
+                                  if (!liveVideoFeedRef.current) return;
+                                  setIsAiCounting(true);
+                                  showToast('Analyzing live webcam frame with Gemini Vision...', 'info');
+
+                                  try {
+                                    const video = liveVideoFeedRef.current;
+                                    const canvas = document.createElement('canvas');
+                                    canvas.width = video.videoWidth || 640;
+                                    canvas.height = video.videoHeight || 480;
+                                    const ctx = canvas.getContext('2d');
+                                    if (!ctx) throw new Error('Canvas context unavailable');
+                                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                                    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                                    const base64Data = dataUrl.replace(/^data:image\/jpeg;base64,/, '');
+
+                                    const res = await fetch('/api/sensors/ai-count', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({
+                                        shelf_id: activeProd.shelf_position,
+                                        image_base64: base64Data,
+                                        expected_product_name: activeProd.name,
+                                      }),
+                                    });
+                                    const json = await res.json();
+                                    if (json.success) {
+                                      setAiCountResult({
+                                        count: json.count,
+                                        confidence: json.confidence,
+                                        detected_product: json.detected_product,
+                                        is_misplaced: json.is_misplaced,
+                                        misplaced_item_name: json.misplaced_item_name,
+                                        notes: json.notes,
+                                      });
+                                      showToast(`AI detected ${json.count} units of ${json.detected_product}!`, 'success');
+                                    } else {
+                                      showToast(json.error || 'Failed to analyze frame', 'normal');
+                                    }
+                                  } catch (err: any) {
+                                    showToast(`Error: ${err.message}`, 'normal');
+                                  } finally {
+                                    setIsAiCounting(false);
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow"
+                              >
+                                ⚡ Count From Live Webcam
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => setIsWebcamModalOpen(true)}
+                              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow hover:shadow-indigo-500/25"
+                            >
+                              📷 Open Webcam & Count
+                            </button>
+
+                            <label className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all">
+                              <span>📁 Upload Photo</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  setIsAiCounting(true);
+                                  showToast('Analyzing shelf photo with Gemini Vision...', 'info');
+
+                                  const reader = new FileReader();
+                                  reader.onload = async () => {
+                                    const base64Data = (reader.result as string).replace(/^data:image\/\w+;base64,/, '');
+                                    try {
+                                      const res = await fetch('/api/sensors/ai-count', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                          shelf_id: activeProd.shelf_position,
+                                          image_base64: base64Data,
+                                          expected_product_name: activeProd.name,
+                                        }),
+                                      });
+                                      const json = await res.json();
+                                      if (json.success) {
+                                        setAiCountResult({
+                                          count: json.count,
+                                          confidence: json.confidence,
+                                          detected_product: json.detected_product,
+                                          is_misplaced: json.is_misplaced,
+                                          misplaced_item_name: json.misplaced_item_name,
+                                          notes: json.notes,
+                                        });
+                                        showToast(`AI identified ${json.count} units of ${json.detected_product}!`, 'success');
+                                      } else {
+                                        showToast(json.error || 'Failed to analyze shelf image', 'normal');
+                                      }
+                                    } catch (err: any) {
+                                      showToast(`Analysis failed: ${err.message}`, 'normal');
+                                    } finally {
+                                      setIsAiCounting(false);
+                                    }
+                                  };
+                                  reader.readAsDataURL(file);
+                                }}
+                              />
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Live AI Count Result Banner */}
+                        {isAiCounting ? (
+                          <div className="p-3 rounded-lg bg-indigo-950/80 border border-indigo-700 text-xs text-indigo-300 flex items-center gap-2 animate-pulse">
+                            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
+                            Scanning shelf image with Gemini Vision neural network to detect and count product units...
+                          </div>
+                        ) : aiCountResult ? (
+                          <div className="p-3 rounded-lg bg-slate-950/90 border border-indigo-500/40 text-xs space-y-2">
+                            <div className="flex items-center justify-between flex-wrap gap-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xl font-mono font-black text-emerald-400">
+                                  {aiCountResult.count} Units Counted
+                                </span>
+                                <span className="text-[11px] text-slate-400">
+                                  ({Math.round(aiCountResult.confidence * 100)}% Confidence)
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-cyan-300">
+                                  Product: {aiCountResult.detected_product}
+                                </span>
+                                {aiCountResult.is_misplaced && (
+                                  <span className="px-2 py-0.5 rounded bg-red-600 text-white text-[10px] font-bold">
+                                    ⚠️ {aiCountResult.misplaced_item_name || 'Misplaced Item Detected'}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {aiCountResult.notes && (
+                              <p className="text-[11px] text-slate-300 bg-slate-900/60 p-2 rounded border border-slate-800">
+                                💡 <strong>Vision Inspector Notes:</strong> {aiCountResult.notes}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-[11px] text-indigo-300/80 flex items-center justify-between">
+                            <span>Ready to count products in front of the camera.</span>
+                            <span className="text-slate-400">ESP32 IP: <code className="text-cyan-300">192.168.137.241</code></span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -1464,6 +1744,49 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                           >
                             ⚡ Restock {activeProd.name}
                           </button>
+
+                          {/* Quick Manual Camera Count Sync */}
+                          <div className="flex items-center gap-1.5 pt-1">
+                            <input
+                              type="number"
+                              min="0"
+                              max={activeProd.max_capacity}
+                              placeholder="Set count..."
+                              value={manualCountInput}
+                              onChange={(e) => setManualCountInput(e.target.value)}
+                              className="px-2 py-1 text-xs border border-slate-300 rounded font-mono w-24 bg-white"
+                            />
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const parsedCount = parseInt(manualCountInput, 10);
+                                if (isNaN(parsedCount) || parsedCount < 0) {
+                                  showToast('Please enter a valid count number', 'normal');
+                                  return;
+                                }
+                                try {
+                                  const res = await fetch('/api/sensors/set-count', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      shelf_id: activeProd.shelf_position,
+                                      count: parsedCount,
+                                      cam_detected_label: activeProd.name,
+                                    }),
+                                  });
+                                  if (res.ok) {
+                                    showToast(`Synced ${activeProd.name} quantity to ${parsedCount} units!`, 'success');
+                                    setManualCountInput('');
+                                  }
+                                } catch (e: any) {
+                                  showToast(`Error: ${e.message}`, 'normal');
+                                }
+                              }}
+                              className="flex-1 py-1 px-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded text-xs font-semibold"
+                            >
+                              Sync Camera Count
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1874,6 +2197,23 @@ python yolo_counter.py`}
           </div>
         </div>
       )}
+
+      {/* Real-Time Optical AI Product Counter Modal */}
+      {(() => {
+        const activeProd = products.find((p) => p.shelf_position === selectedShelfForCam) || products[0];
+        return (
+          <WebcamProductCounterModal
+            isOpen={isWebcamModalOpen}
+            onClose={() => setIsWebcamModalOpen(false)}
+            shelfId={activeProd?.shelf_position || 'Aisle 3 · Rack B'}
+            expectedProductName={activeProd?.name || 'Retail Product'}
+            onCountSuccess={(res) => {
+              setAiCountResult(res);
+            }}
+            onToast={showToast}
+          />
+        );
+      })()}
     </div>
   );
 };
